@@ -6,6 +6,13 @@ import {
     signInWithPopup,
     signInWithRedirect
 } from "firebase/auth"
+
+import{
+  getFirestore,
+  doc,
+  getDoc,
+  setDoc
+} from "firebase/firestore"
 // TODO: Add SDKs for Firebase products that you want to use
 // https://firebase.google.com/docs/web/setup#available-libraries
 
@@ -22,11 +29,36 @@ const firebaseConfig = {
 // Initialize Firebase
 const firebaseApp = initializeApp(firebaseConfig);
 
-const provider = GoogleAuthProvider();
+const provider = new GoogleAuthProvider();
 provider.setCustomParameters({
-    'prompt' : "select_sccount"
+    // 'prompt' : "select_sccount"
 });
 
 export const auth = getAuth();
 
 export const signInWithGooglePopup = () => signInWithPopup(auth,provider)
+
+export const db = getFirestore()
+
+export const createDocFromUserAuth = async (userAuth) => {
+  const userDocRef = doc(db,'users',userAuth.uid)
+  console.log(userDocRef)
+  const userSnapShot =  await getDoc(userDocRef)
+  console.log(userSnapShot)
+  console.log(userSnapShot.exists())
+  //create a doc if dosent exists
+  if(!userSnapShot.exists()){
+    const {displayName,email} = userSnapShot;
+    const createdAt = Date()
+
+    try{
+      await setDoc(userDocRef,{
+        displayName,
+        email,
+        createdAt
+      })
+    }catch(err){
+      console.log("Error creating user",err.message)
+    }
+  }
+}
